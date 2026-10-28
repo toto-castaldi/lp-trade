@@ -119,6 +119,12 @@ def main():
         for q in json.loads(Path(f).read_text()):
             quotes[str(q["front"])] = q
 
+    calibrated_path = DATA / "calibrated.json"
+    if calibrated_path.exists():
+        for front, c in json.loads(calibrated_path.read_text()).items():
+            if front in quotes:
+                quotes[front] = {**quotes[front], **c}
+
     discogs_path = DATA / "discogs.json"
     discogs = json.loads(discogs_path.read_text()) if discogs_path.exists() else {}
 
@@ -142,6 +148,8 @@ def main():
                 "source": q.get("source"),
                 "source_url": q.get("source_url"),
                 "note": q.get("note"),
+                "basis": q.get("basis"),
+                "previous": q.get("previous"),
                 "discogs": [
                     {k: r[k] for k in ("title", "year", "country", "catno", "label",
                                        "have", "want", "num_for_sale", "lowest_eur", "url")}

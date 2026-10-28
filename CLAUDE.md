@@ -16,6 +16,7 @@ Il repository e il sito sono **pubblici**. Prezzi, totale, note di quotazione e 
 - `data/catalog.tsv` — catalogo pubblico (fonte di verità): `front`, `back` (numeri foto IMG_xxxx), `artist`, `title`, `year`.
 - `data/quotes_*.json` — (privato) quotazioni per disco, chiave `front`: `price_min`, `price_max`, `price_suggested`, `source`, `source_url`, `note`; possono correggere `artist`/`title`/`year`.
 - `data/discogs.json` — (privato) output di `discogs.py`: stampe trovate con copie in vendita, prezzo minimo, have/want.
+- `data/calibrated.json` — (privato) output di `calibrate.py`: prezzi ricalibrati sui dati Discogs, applicati da `build.py` sopra le stime di `quotes_*.json`.
 - `photos/IMG_xxxx.jpg` — foto 1200px; `photos/thumbs/` — 500px per la griglia.
 - `records.js` — generato, dati pubblici (`window.RECORDS`).
 - `prices.enc.json` — generato, dati privati cifrati.
@@ -26,6 +27,7 @@ Il repository e il sito sono **pubblici**. Prezzi, totale, note di quotazione e 
 ```sh
 python3 build.py              # rigenera records.js, prices.enc.json e dischi.pdf (richiede `cryptography`, `reportlab`, `Pillow`)
 python3 discogs.py            # interroga l'API pubblica Discogs (~25 req/min, riprende da dove si era fermato)
+python3 calibrate.py          # ricalcola i prezzi suggeriti dai dati Discogs (regola documentata nel file)
 python3 -m http.server 8000   # anteprima locale su http://localhost:8000
 ```
 

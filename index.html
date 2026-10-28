@@ -357,6 +357,8 @@
   function privateDetail(p) {
     if (!p) return "";
     const rows = [];
+    if (p.basis) rows.push(["Calcolo", esc(p.basis)]);
+    if (p.previous != null && p.previous !== p.price) rows.push(["Stima iniziale", eur(p.previous)]);
     if (p.note) rows.push(["Note", esc(p.note)]);
     if (p.source) rows.push(["Fonte", p.source_url ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source)}</a>` : esc(p.source)]);
     const discogs = (p.discogs || []).length ? `
