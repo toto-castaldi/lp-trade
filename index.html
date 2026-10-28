@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4efe6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161311" media="(prefers-color-scheme: dark)">
+<title>Dischi in vendita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4efe6;
+    --surface: #fffaf2;
+    --ink: #1e1a16;
+    --muted: #6f655a;
+    --line: #e2d8c8;
+    --accent: #c2410c;
+    --accent-ink: #fff;
+    --shadow: 0 1px 2px rgba(30,26,22,.06), 0 6px 18px rgba(30,26,22,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161311;
+      --surface: #201c19;
+      --ink: #f1e9dd;
+      --muted: #a89b8b;
+      --line: #342d27;
+      --accent: #f97316;
+      --accent-ink: #1a0f06;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.45 Inter, system-ui, sans-serif;
+  }
+  header {
+    padding: 40px 16px 20px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-family: Fraunces, Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(32px, 6vw, 56px);
+    line-height: 1;
+    margin: 0 0 10px;
+    letter-spacing: -.01em;
+  }
+  .stats { color: var(--muted); margin: 0; }
+  .stats b { color: var(--ink); font-weight: 600; }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 5;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .toolbar-inner {
+    max-width: 1280px; margin: 0 auto; padding: 12px 16px;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .toolbar input, .toolbar select {
+    font: inherit; color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .toolbar input { flex: 1 1 220px; min-width: 0; }
+  .count { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+  main {
+    max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px;
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform .15s ease;
+    display: flex; flex-direction: column;
+    text-align: left; padding: 0; font: inherit; color: inherit;
+  }
+  .card:hover, .card:focus-visible { transform: translateY(-3px); outline: none; }
+  .card:focus-visible { box-shadow: 0 0 0 3px var(--accent); }
+  .cover { aspect-ratio: 1; width: 100%; object-fit: cover; display: block; background: var(--line); }
+  .info { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .artist { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .title { font-family: Fraunces, Georgia, serif; font-weight: 500; font-size: 17px; line-height: 1.2; }
+  .meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: 8px; }
+  .year { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .price { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .empty { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 40px 0; }
+
+  dialog {
+    border: none; padding: 0; border-radius: 14px;
+    background: var(--surface); color: var(--ink);
+    width: min(960px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  dialog::backdrop { background: rgba(10,8,6,.7); }
+  .detail { display: grid; grid-template-columns: 1.3fr 1fr; }
+  .gallery { background: #0e0c0a; position: relative; }
+  .gallery img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
+  .flip {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px;
+  }
+  .flip button {
+    font: inherit; font-size: 13px; border: none; border-radius: 999px;
+    padding: 6px 14px; cursor: pointer;
+    background: rgba(0,0,0,.6); color: #fff;
+    backdrop-filter: blur(4px);
+  }
+  .flip button[aria-pressed="true"] { background: #fff; color: #111; }
+  .side { padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .side h2 { font-family: Fraunces, Georgia, serif; font-size: 28px; line-height: 1.1; margin: 0; }
+  .side .artist { font-size: 13px; }
+  .big-price { font-size: 34px; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .range { color: var(--muted); font-size: 14px; }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  a { color: var(--accent); }
+  .close {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(0,0,0,.55); color: #fff; font-size: 20px; line-height: 1;
+  }
+  .discogs h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 6px; }
+  .discogs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .discogs li { border-top: 1px solid var(--line); padding-top: 8px; }
+  .dmeta { color: var(--muted); font-size: 13px; }
+  .disclaimer { font-size: 12px; color: var(--muted); margin-top: auto; }
+
+  dialog { overflow-y: auto; overscroll-behavior: contain; }
+  @media (max-width: 720px) {
+    header { padding: 24px 16px 14px; }
+    main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-top: 14px; }
+    .info { padding: 8px 10px 10px; }
+    .artist { font-size: 11px; }
+    .title { font-size: 15px; overflow-wrap: anywhere; }
+    .toolbar-inner { padding: 10px 16px; gap: 8px; }
+    .toolbar input { flex-basis: 100%; font-size: 16px; } /* 16px evita lo zoom automatico su iOS */
+    .toolbar select { font-size: 16px; }
+    #pw { font-size: 16px; }
+    #dlg {
+      width: 100vw; max-width: 100vw;
+      height: 100dvh; max-height: 100dvh;
+      margin: 0; border-radius: 0;
+    }
+    .detail { grid-template-columns: 1fr; }
+    .side { padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+    .side h2 { font-size: 24px; }
+    .close { position: fixed; top: calc(10px + env(safe-area-inset-top)); width: 44px; height: 44px; }
+    .flip button { padding: 10px 18px; }
+  }
+  @media (hover: none) { .card:hover { transform: none; } }
+  .private { display: none; }
+  body.unlocked .private { display: revert; }
+  body.unlocked .price.private { display: inline; }
+  footer {
+    max-width: 1280px; margin: 0 auto; padding: 0 16px 32px;
+    display: flex; justify-content: flex-end;
+  }
+  .lock {
+    font: inherit; font-size: 13px; color: var(--muted);
+    background: none; border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  #login { width: min(360px, calc(100vw - 32px)); padding: 24px; }
+  #login form { display: flex; flex-direction: column; gap: 12px; }
+  #login h2 { font-family: Fraunces, Georgia, serif; margin: 0; font-size: 22px; }
+  #login input {
+    font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+  }
+  #login .row { display: flex; gap: 8px; justify-content: flex-end; }
+  #login button {
+    font: inherit; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+    border: 1px solid var(--line); background: none; color: var(--ink);
+  }
+  #login button[type="submit"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  #login-err { color: var(--accent); font-size: 13px; min-height: 1em; margin: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dischi in vendita</h1>
+  <p class="stats" id="stats"></p>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <input id="q" type="search" placeholder="Cerca artista o titolo…" aria-label="Cerca">
+    <select id="sort" aria-label="Ordina">
+      <option value="artist">Artista A–Z</option>
+      <option value="year">Anno ↑</option>
+      <option value="year-desc">Anno ↓</option>
+      <option value="price-desc" class="private">Prezzo ↓</option>
+      <option value="price" class="private">Prezzo ↑</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+
+<main id="grid"></main>
+
+<footer>
+  <button class="lock" id="lock">🔒 Area riservata</button>
+</footer>
+
+<dialog id="dlg">
+  <button class="close" id="close" aria-label="Chiudi">×</button>
+  <div class="detail">
+    <div class="gallery">
+      <img id="d-img" alt="">
+      <div class="flip">
+        <button id="b-front" aria-pressed="true">Fronte</button>
+        <button id="b-back" aria-pressed="false">Retro</button>
+      </div>
+    </div>
+    <div class="side">
+      <div>
+        <div class="artist" id="d-artist"></div>
+        <h2 id="d-title"></h2>
+      </div>
+      <dl id="d-meta"></dl>
+      <div class="private" id="d-private"></div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="login">
+  <form id="login-form">
+    <h2>Area riservata</h2>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+    <p id="login-err"></p>
+    <div class="row">
+      <button type="button" id="login-cancel">Annulla</button>
+      <button type="submit">Sblocca</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="records.js"></script>
+<script>
+  const records = window.RECORDS || [];
+  let prices = null; // decifrati solo con la password
+  const PW_KEY = "lp-trade-pw";
+  const $ = (id) => document.getElementById(id);
+  const eur = (n) => n == null ? "—" : "€ " + n;
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const priceOf = (r) => prices?.[r.id]?.price ?? null;
+
+  // --- decifratura (AES-GCM, chiave PBKDF2-SHA256 dalla password) ---
+  const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  async function decryptPrices(pw) {
+    const enc = await (await fetch("prices.enc.json", { cache: "no-store" })).json();
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", hash: "SHA-256", salt: fromB64(enc.salt), iterations: enc.iterations },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(enc.iv) }, key, fromB64(enc.data));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  async function unlock(pw, remember) {
+    prices = await decryptPrices(pw); // lancia un errore se la password è sbagliata
+    if (remember) { try { localStorage.setItem(PW_KEY, pw); } catch {} }
+    document.body.classList.add("unlocked");
+    $("lock").textContent = "🔓 Esci";
+    render();
+  }
+
+  function lock() {
+    prices = null;
+    try { localStorage.removeItem(PW_KEY); } catch {}
+    document.body.classList.remove("unlocked");
+    $("lock").textContent = "🔒 Area riservata";
+    if ($("sort").value.startsWith("price")) $("sort").value = "artist";
+    render();
+  }
+
+  // --- griglia ---
+  const sorters = {
+    artist: (a, b) => a.artist.localeCompare(b.artist, "it") || a.year - b.year,
+    year: (a, b) => a.year - b.year,
+    "year-desc": (a, b) => b.year - a.year,
+    price: (a, b) => (priceOf(a) ?? 1e9) - (priceOf(b) ?? 1e9),
+    "price-desc": (a, b) => (priceOf(b) ?? -1) - (priceOf(a) ?? -1),
+  };
+
+  function render() {
+    let stats = `<b>${records.length}</b> LP`;
+    if (prices) {
+      const total = records.reduce((s, r) => s + (priceOf(r) ?? 0), 0);
+      stats += ` · valore stimato complessivo <b>${eur(total)}</b>`;
+    }
+    $("stats").innerHTML = stats;
+
+    const q = $("q").value.trim().toLowerCase();
+    const list = records
+      .filter((r) => !q || (r.artist + " " + r.title).toLowerCase().includes(q))
+      .sort(sorters[$("sort").value]);
+    $("count").textContent = `${list.length} dischi`;
+    $("grid").innerHTML = list.length ? list.map((r) => `
+      <button class="card" data-id="${r.id}">
+        <img class="cover" src="photos/thumbs/${r.front}" alt="${esc(r.artist)} – ${esc(r.title)}" loading="lazy">
+        <div class="info">
+          <span class="artist">${esc(r.artist)}</span>
+          <span class="title">${esc(r.title)}</span>
+          <span class="meta"><span class="year">${r.year}</span>${prices ? `<span class="price">${eur(priceOf(r))}</span>` : ""}</span>
+        </div>
+      </button>`).join("") : `<p class="empty">Nessun disco trovato.</p>`;
+  }
+
+  // --- scheda disco ---
+  function showSide(r, side) {
+    $("d-img").src = "photos/" + (side === "back" ? r.back : r.front);
+    $("d-img").alt = `${r.artist} – ${r.title} (${side === "back" ? "retro" : "fronte"})`;
+    $("b-front").setAttribute("aria-pressed", side === "front");
+    $("b-back").setAttribute("aria-pressed", side === "back");
+  }
+
+  function privateDetail(p) {
+    if (!p) return "";
+    const rows = [];
+    if (p.note) rows.push(["Note", esc(p.note)]);
+    if (p.source) rows.push(["Fonte", p.source_url ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source)}</a>` : esc(p.source)]);
+    const discogs = (p.discogs || []).length ? `
+      <div class="discogs">
+        <h3>Su Discogs oggi</h3>
+        <ul>${p.discogs.map((d) => `
+          <li><a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.label || "")} ${esc(d.catno || "")}</a>
+            <span>${esc(d.country || "")} ${esc(d.year || "")}</span><br>
+            <span class="dmeta">${d.num_for_sale ? `${d.num_for_sale} in vendita, da € ${d.lowest_eur}` : "nessuna copia in vendita"} · ${d.want ?? 0} lo cercano</span>
+          </li>`).join("")}</ul>
+      </div>` : "";
+    return `
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div class="big-price">${eur(p.price)}</div>
+          ${p.price_min != null ? `<div class="range">Range di mercato: € ${p.price_min} – € ${p.price_max}</div>` : ""}
+        </div>
+        <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
+        ${discogs}
+        <p class="disclaimer">Quotazioni indicative per copie usate VG/VG+. Il prezzo finale dipende dallo stato del vinile e dalla stampa.</p>
+      </div>`;
+  }
+
+  let current = null;
+  function open(r) {
+    current = r;
+    $("d-artist").textContent = r.artist;
+    $("d-title").textContent = r.title;
+    $("d-meta").innerHTML = `<dt>Anno</dt><dd>${r.year}</dd>`;
+    $("d-private").innerHTML = prices ? privateDetail(prices[r.id]) : "";
+    showSide(r, "front");
+    $("dlg").showModal();
+  }
+
+  // --- eventi ---
+  $("grid").addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    if (card) open(records.find((r) => r.id === card.dataset.id));
+  });
+  $("b-front").onclick = () => showSide(current, "front");
+  $("b-back").onclick = () => showSide(current, "back");
+  $("close").onclick = () => $("dlg").close();
+  $("dlg").addEventListener("click", (e) => { if (e.target === $("dlg")) $("dlg").close(); });
+  $("q").addEventListener("input", render);
+  $("sort").addEventListener("change", render);
+
+  $("lock").onclick = () => {
+    if (prices) return lock();
+    $("pw").value = ""; $("login-err").textContent = "";
+    $("login").showModal();
+  };
+  $("login-cancel").onclick = () => $("login").close();
+  $("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await unlock($("pw").value, true);
+      $("login").close();
+    } catch {
+      $("login-err").textContent = "Password errata.";
+    }
+  });
+
+  render();
+  // sblocco automatico sul tuo dispositivo se la password è già stata inserita
+  let saved = null;
+  try { saved = localStorage.getItem(PW_KEY); } catch {}
+  if (saved) unlock(saved, false).catch(lock);
+</script>
+</body>
+</html>

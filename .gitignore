@@ -1,0 +1,6 @@
+# Mai pubblicare: password e quotazioni in chiaro
+.prices-password
+data/quotes_*.json
+data/discogs.json
+data/part_*.tsv
+__pycache__/
