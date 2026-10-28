@@ -19,16 +19,17 @@ Il repository e il sito sono **pubblici**. Prezzi, totale, note di quotazione e 
 - `photos/IMG_xxxx.jpg` — foto 1200px; `photos/thumbs/` — 500px per la griglia.
 - `records.js` — generato, dati pubblici (`window.RECORDS`).
 - `prices.enc.json` — generato, dati privati cifrati.
+- `dischi.pdf` — generato, elenco pubblico scaricabile (copertina, artista, titolo, anno). Non deve mai contenere prezzi.
 
 ## Comandi
 
 ```sh
-python3 build.py              # rigenera records.js e prices.enc.json (richiede il pacchetto `cryptography`)
+python3 build.py              # rigenera records.js, prices.enc.json e dischi.pdf (richiede `cryptography`, `reportlab`, `Pillow`)
 python3 discogs.py            # interroga l'API pubblica Discogs (~25 req/min, riprende da dove si era fermato)
 python3 -m http.server 8000   # anteprima locale su http://localhost:8000
 ```
 
-Dopo aver modificato `data/` rilancia sempre `build.py` e committa `records.js` e `prices.enc.json`.
+Dopo aver modificato `data/` rilancia sempre `build.py` e committa `records.js`, `prices.enc.json` e `dischi.pdf`.
 
 ## Aggiungere dischi
 

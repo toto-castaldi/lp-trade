@@ -41,6 +41,78 @@ def encrypt(payload, pw):
     return {"iterations": PBKDF2_ITERATIONS, "salt": b64(salt), "iv": b64(iv), "data": b64(ct)}
 
 
+def build_pdf(records, out):
+    """Lista pubblica dei dischi (copertina, artista, titolo, anno). Mai prezzi."""
+    import io
+    from datetime import date
+
+    from PIL import Image as PILImage
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    font, bold = "Helvetica", "Helvetica-Bold"
+    dejavu = Path("/usr/share/fonts/truetype/dejavu")
+    if (dejavu / "DejaVuSans.ttf").exists():
+        pdfmetrics.registerFont(TTFont("DejaVu", str(dejavu / "DejaVuSans.ttf")))
+        pdfmetrics.registerFont(TTFont("DejaVu-Bold", str(dejavu / "DejaVuSans-Bold.ttf")))
+        font, bold = "DejaVu", "DejaVu-Bold"
+
+    ink, muted, line = colors.HexColor("#1e1a16"), colors.HexColor("#6f655a"), colors.HexColor("#e2d8c8")
+    h1 = ParagraphStyle("h1", fontName=bold, fontSize=22, leading=26, textColor=ink)
+    sub = ParagraphStyle("sub", fontName=font, fontSize=10, leading=14, textColor=muted)
+    artist = ParagraphStyle("artist", fontName=font, fontSize=8, leading=10, textColor=muted)
+    title = ParagraphStyle("title", fontName=bold, fontSize=10.5, leading=13, textColor=ink)
+    cell = ParagraphStyle("cell", fontName=font, fontSize=10, leading=13, textColor=ink)
+
+    def cover(name):
+        im = PILImage.open(ROOT / "photos" / "thumbs" / name).convert("RGB")
+        side = min(im.size)  # ritaglio quadrato centrato, come nella griglia del sito
+        left, top = (im.width - side) // 2, (im.height - side) // 2
+        im = im.crop((left, top, left + side, top + side)).resize((160, 160))
+        buf = io.BytesIO()
+        im.save(buf, "JPEG", quality=72)
+        buf.seek(0)
+        return Image(buf, width=16 * mm, height=16 * mm)
+
+    esc = lambda s: str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    ordered = sorted(records, key=lambda r: (r["artist"].casefold(), r["year"]))
+    rows = [[Paragraph("<b>#</b>", sub), "", Paragraph("<b>Artista / Titolo</b>", sub), Paragraph("<b>Anno</b>", sub)]]
+    for i, r in enumerate(ordered, 1):
+        rows.append([
+            Paragraph(str(i), sub),
+            cover(r["front"]),
+            [Paragraph(esc(r["artist"]).upper(), artist), Paragraph(esc(r["title"]), title)],
+            Paragraph(str(r["year"]), cell),
+        ])
+
+    table = Table(rows, colWidths=[10 * mm, 20 * mm, 128 * mm, 16 * mm], repeatRows=1)
+    table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LINEBELOW", (0, 0), (-1, -1), 0.4, line),
+        ("TOPPADDING", (0, 1), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 1), (-1, -1), 4),
+    ]))
+
+    def footer(canvas, doc):
+        canvas.setFont(font, 8)
+        canvas.setFillColor(muted)
+        canvas.drawRightString(A4[0] - 18 * mm, 10 * mm, f"Pagina {doc.page}")
+
+    doc = SimpleDocTemplate(str(out), pagesize=A4, title="Dischi in vendita",
+                            leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=16 * mm)
+    doc.build([
+        Paragraph("Dischi in vendita", h1),
+        Paragraph(f"{len(records)} LP · elenco aggiornato al {date.today():%d/%m/%Y}", sub),
+        Spacer(1, 6 * mm),
+        table,
+    ], onFirstPage=footer, onLaterPages=footer)
+
+
 def main():
     quotes = {}
     for f in sorted(glob.glob(str(DATA / "quotes_*.json"))):
@@ -80,6 +152,7 @@ def main():
     (ROOT / "records.js").write_text(
         "window.RECORDS = " + json.dumps(records, ensure_ascii=False, indent=1) + ";\n")
     (ROOT / "prices.enc.json").write_text(json.dumps(encrypt(prices, password())))
+    build_pdf(records, ROOT / "dischi.pdf")
     priced = sum(1 for p in prices.values() if p["price"] is not None)
     print(f"{len(records)} dischi, {priced} con quotazione (cifrate in prices.enc.json)")
 
