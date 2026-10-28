@@ -195,7 +195,7 @@ window.RECORDS = [
   "id": "3827",
   "artist": "Complesso Ambrosiano Pinotti-Carluccio",
   "title": "Il liscio da gara",
-  "year": 1979,
+  "year": 1976,
   "front": "IMG_3827.jpg",
   "back": "IMG_3828.jpg"
  },
@@ -291,7 +291,7 @@ window.RECORDS = [
   "id": "3851",
   "artist": "Il Coro degli Angeli",
   "title": "Canzoni di Mogol-Battisti",
-  "year": 1986,
+  "year": 1982,
   "front": "IMG_3851.jpg",
   "back": "IMG_3852.jpg"
  },
@@ -299,7 +299,7 @@ window.RECORDS = [
   "id": "3853",
   "artist": "Renzo Villa",
   "title": "Romanticamente tuo (autografato)",
-  "year": 1984,
+  "year": 1981,
   "front": "IMG_3853.jpg",
   "back": "IMG_3854.jpg"
  },
@@ -883,7 +883,7 @@ window.RECORDS = [
   "id": "3999",
   "artist": "Francesco Bruno",
   "title": "Interface",
-  "year": 1985,
+  "year": 1987,
   "front": "IMG_3999.jpg",
   "back": "IMG_4001.jpg"
  },
