@@ -206,8 +206,6 @@
       <option value="artist">Artista A–Z</option>
       <option value="year">Anno ↑</option>
       <option value="year-desc">Anno ↓</option>
-      <option value="price-desc" class="private">Prezzo ↓</option>
-      <option value="price" class="private">Prezzo ↑</option>
     </select>
     <span class="count" id="count"></span>
   </div>
@@ -279,7 +277,19 @@
     if (remember) { try { localStorage.setItem(PW_KEY, pw); } catch {} }
     document.body.classList.add("unlocked");
     $("lock").textContent = "🔓 Esci";
+    setPriceSort(true);
     render();
+  }
+
+  // Le opzioni di prezzo esistono nel menu solo da autenticati
+  // (display:none sulle <option> non funziona su iOS Safari).
+  function setPriceSort(on) {
+    const sel = $("sort");
+    sel.querySelectorAll('option[value^="price"]').forEach((o) => o.remove());
+    if (on) {
+      sel.add(new Option("Prezzo ↓", "price-desc"));
+      sel.add(new Option("Prezzo ↑", "price"));
+    }
   }
 
   function lock() {
@@ -288,6 +298,7 @@
     document.body.classList.remove("unlocked");
     $("lock").textContent = "🔒 Area riservata";
     if ($("sort").value.startsWith("price")) $("sort").value = "artist";
+    setPriceSort(false);
     render();
   }
 
